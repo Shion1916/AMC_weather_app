@@ -1,0 +1,41 @@
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../models/weather.dart';
+
+class WeatherService {
+
+  static const String apiKey = 'ddbab63e47adf3f0447c12239e0bad74';
+  static const String baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
+
+
+  static Future<Weather> getWeather(String cityName) async{
+    try{
+      String url = '$baseUrl?q=$cityName&appid=$apiKey&units=metric';
+
+      if(kIsWeb){
+        url = 'https://corsproxy.io/?' + Uri.encodeComponent(url);
+      }
+
+      final http.Response response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if(response.statusCode == 200){
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        return Weather.fromJson(data);
+
+      }
+      else if (response.statusCode == 404){
+        throw Exception('City Not Found');
+      }
+      else{
+        throw Exception('failed to load Weather');
+      }
+    }
+    catch(e){
+      throw Exception('Error Fetching Weather: $e');
+    }
+  }
+}
